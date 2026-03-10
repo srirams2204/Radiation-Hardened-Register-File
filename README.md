@@ -23,7 +23,7 @@ techniques to maintain correct operation even when faults occur.
 ## Block Diagram
 
 <p align="center">
-  <img src="DOCS/reg_file.png" width="400">
+  <img src="pic/reg_file.png" width="400">
 </p>
 
 ### Block Diagram Description
