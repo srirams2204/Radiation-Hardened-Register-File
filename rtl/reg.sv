@@ -8,7 +8,7 @@ module register_file (
     input reg_write
 );
 
-(* ram_style = "distributed" *) reg [31:0] register [0:31];
+reg [31:0] register [0:31];
 
 // Optional init for simulation
 integer i;
