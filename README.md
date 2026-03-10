@@ -36,7 +36,7 @@ To address this issue, **radiation-hardened digital circuits** use redundancy te
 ## Block Diagram
 
 <p align="center">
-  <img src="DOCS/reg_file.png" width="400">
+  <img src="pic/reg_file.png" width="400">
 </p>
 
 ### Block Diagram Description
