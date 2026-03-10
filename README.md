@@ -219,6 +219,39 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 - The **radiation-hardened design** consumes more area due to redundant register file copies.
 - Additional logic is required to implement the **majority voting mechanism**.
 - Despite the area overhead, the design provides **fault tolerance against Single Event Upsets (SEU)**, ensuring reliable operation in radiation-prone environments.
+### Results 
+## Timing Report
+
+| Parameter | Value |
+|----------|-------|
+| Clock Period | 5 ns |
+| Data Required Time | 4.20 ns |
+| Data Arrival Time | -1.54 ns |
+| Slack | 2.66 ns |
+| Hold Violations | 0 |
+
+---
+
+## Area Report
+
+| Parameter | Value |
+|----------|-------|
+| Ports | 113 |
+| Nets | 3631 |
+| Cells | 3582 |
+| Total Cell Area | 13007.852587 µm² |
+| Total Area | 18347.801939 µm² |
+
+---
+
+## Power Report
+
+| Parameter | Value |
+|----------|-------|
+| Internal Power | 735.8311 µW |
+| Switching Power | 6.2854 µW |
+| Leakage Power | 2.8275 × 10⁻⁷ pW |
+| Total Power | 770.3917 µW |
 
 
 
