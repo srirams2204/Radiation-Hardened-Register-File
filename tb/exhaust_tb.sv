@@ -248,86 +248,144 @@ module tb;
 
     environment env;
 
-    // --- TASK: EXHAUSTIVE SINGLE EVENT UPSET (SEU) ---
+    // --- HELPER TASK: TABULAR MEMORY DUMP ---
+    task display_memory_state(string scenario_name);
+        int i;          // Static declaration for VCS
+        string status;  // Static declaration for VCS
+        
+        $display("\n===========================================================================");
+        $display(" MEMORY DUMP: %s", scenario_name);
+        $display("===========================================================================");
+        $display("| ADDR |      regA      |      regB      |      regC      |   STATUS  |");
+        $display("===========================================================================");
+        
+        for (i = 0; i < 32; i++) begin
+            status = (DUT.regA[i] == DUT.regB[i] && DUT.regB[i] == DUT.regC[i]) ? "  OK  " : "*FAULT*";
+            $display("|  %2d  |   %8h   |   %8h   |   %8h   |  %s |", 
+                     i, DUT.regA[i], DUT.regB[i], DUT.regC[i], status);
+        end
+        $display("===========================================================================\n");
+    endtask
+
+    // --- SCENARIO 1: EXHAUSTIVE SEU ---
     task exhaustive_seu_test();
-        int arr, r, b; // Static declarations for VCS
+        int arr, r, b; 
+        logic [31:0] orig_val, bad_val;
+        
         $display("\n[TB] @%0t: === SCENARIO 1: EXHAUSTIVE SEU CAMPAIGN ===", $time);
-        $display(" Injecting, verifying, and healing 3,072 individual bit-flips...");
+        $display(" Injecting and verifying 3,072 individual bit-flips...\n");
         
         for (arr = 0; arr < 3; arr++) begin
             for (r = 0; r < 32; r++) begin
                 for (b = 0; b < 32; b++) begin
-                    // 1. INJECT FAULT
+                    // Capture original value
+                    if (arr == 0) orig_val = DUT.regA[r];
+                    else if (arr == 1) orig_val = DUT.regB[r];
+                    else orig_val = DUT.regC[r];
+
+                    // Inject Fault
                     if (arr == 0) DUT.regA[r][b] = ~DUT.regA[r][b];
                     else if (arr == 1) DUT.regB[r][b] = ~DUT.regB[r][b];
                     else DUT.regC[r][b] = ~DUT.regC[r][b];
                     
-                    // 2. VERIFY
+                    // Capture corrupted value
+                    if (arr == 0) bad_val = DUT.regA[r];
+                    else if (arr == 1) bad_val = DUT.regB[r];
+                    else bad_val = DUT.regC[r];
+
+                    // Print the exact corruption in Hex
+                    $display("[SEU] Array %0d | Addr %2d | Bit %2d flipped | Orig: %8h -> Bad: %8h", arr, r, b, orig_val, bad_val);
+                    
+                    // Verify TMR masks it
                     env.gen.read_single(r); 
                     wait(env.gen.gen2drv.num() == 0); 
                     #15; 
                     
-                    // 3. HEAL FAULT
+                    // Heal the Fault
                     if (arr == 0) DUT.regA[r][b] = ~DUT.regA[r][b];
                     else if (arr == 1) DUT.regB[r][b] = ~DUT.regB[r][b];
                     else DUT.regC[r][b] = ~DUT.regC[r][b];
                 end
             end
         end
-        $display("[TB] Exhaustive SEU Campaign Complete. TMR successfully corrected all faults!");
     endtask
 
-    // --- TASK: DOUBLE EVENT UPSET (DEU) - INTENTIONAL FAILURE ---
-    task inject_tmr_breaking_faults();
-        int r_idx, b_idx;
-        $display("\n[TB] @%0t: === SCENARIO 2: DOUBLE EVENT UPSET (DEU) ===", $time);
-        $display(" Intentionally corrupting the SAME bit in BOTH regA and regB to break the TMR voter!");
+    // --- SCENARIO 2: DOUBLE EVENT UPSET (DEU) ---
+    task scenario_2_deu();
+        int r_idx, b_idx, i;
+        $display("\n[TB] @%0t: === SCENARIO 2: DEU (SAME ADDRESS, 2 ARRAYS) ===", $time);
         
-        for (int i = 0; i < 5; i++) begin
+        for (i = 0; i < 5; i++) begin
             r_idx = $urandom_range(0, 31); 
             b_idx = $urandom_range(0, 31); 
             
-            // Flip the exact same bit in two different arrays to outvote the perfect array (regC)
+            // Corrupt BOTH regA and regB at the exact same bit!
             DUT.regA[r_idx][b_idx] = ~DUT.regA[r_idx][b_idx];
             DUT.regB[r_idx][b_idx] = ~DUT.regB[r_idx][b_idx];
-            
-            $display("[TB] DEU Injected at Address %2d, Bit %2d (regA and regB corrupted)", r_idx, b_idx);
+        end
+    endtask
+
+    // --- SCENARIO 3: TWO FULL ARRAYS FAIL ---
+    task scenario_3_double_array_fail();
+        int i;
+        $display("\n[TB] @%0t: === SCENARIO 3: TOTAL COLLAPSE (2 ARRAYS DESTROYED) ===", $time);
+        
+        for (i = 0; i < 32; i++) begin
+            // Fill both regA and regC with complete garbage
+            DUT.regA[i] = $urandom();
+            DUT.regC[i] = $urandom();
         end
     endtask
 
     // --- MASTER TIMELINE ---
     initial begin
         env = new(intf.TB);
-        env.test(); 
+        env.scb.verbose = 0; // Keep Scoreboard quiet for the exhaustive loop
         
-        // Turn OFF verbose so the terminal doesn't lag printing 6000 lines
-        env.scb.verbose = 0; 
-
-        $display("\n=========================================================");
-        $display("   STARTING TMR REGISTER FILE VERIFICATION");
-        $display("=========================================================\n");
-
-        // 1. WRITE BASELINE DATA
-        $display("[TB] Phase 1: Writing Baseline Data...");
+        // --- BASELINE ---
+        env.test(); 
         env.gen.write_mem();
         wait(env.gen.gen2drv.num() == 0); 
         #30; 
 
-        // 2. EXHAUSTIVE SEU (Should result in 100% Passes)
+        // ==========================================
+        // RUN SCENARIO 1 (Exhaustive)
+        // ==========================================
         exhaustive_seu_test();
 
-        // 3. INTENTIONAL DOUBLE FAULTS (Should result in exactly 10 FAILS!)
-        inject_tmr_breaking_faults();
-        #10;
+        // ==========================================
+        // RUN SCENARIO 2 (DEU)
+        // ==========================================
+        scenario_2_deu();
+        display_memory_state("SCENARIO 2: DEU INJECTED (TMR WILL FAIL)");
         
-        $display("[TB] Reading memory to verify Fails are caught by Scoreboard...");
-        // Turn verbose back ON so you can see the table for the read phase
+        $display("[TB] Reading memory to verify TMR voter failure...");
+        env.scb.verbose = 1; // Turn Scoreboard printing ON so we see the FAILs
+        env.gen.read_mem(); 
+        wait(env.gen.gen2drv.num() == 0); 
+        #25; 
+
+        // HEAL MEMORY BETWEEN SCENARIOS
+        env.scb.verbose = 0;
+        env.gen.write_mem();
+        wait(env.gen.gen2drv.num() == 0); 
+        #30; 
+
+        // ==========================================
+        // RUN SCENARIO 3 (Total Collapse)
+        // ==========================================
+        scenario_3_double_array_fail();
+        display_memory_state("SCENARIO 3: REG-A & REG-C TOTALLY DESTROYED");
+        
+        $display("[TB] Reading memory... prepare for massive failures...");
         env.scb.verbose = 1; 
         env.gen.read_mem(); 
         wait(env.gen.gen2drv.num() == 0); 
         #25; 
 
-        // 4. PRINT FINAL RESULTS
+        // ==========================================
+        // FINAL RESULTS
+        // ==========================================
         env.scb.print_summary();
         env.mon.print_coverage();
         
