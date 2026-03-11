@@ -205,9 +205,9 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 | Parameter (ns) | Normal Reg File | Hardened Reg File |
 |----------|-------| --------|
-| Clock Period  | 2.2 | 2.2 |
-| Data Required Time | 1.40 | 1.40 |
-| Data Arrival Time | -1.40 | -1.40 |
+| Clock Period  | 2.2 | 2.5 |
+| Data Required Time | 1.40 | 1.70 |
+| Data Arrival Time | -1.40 | -1.70 |
 | Hold Violations | 0 | 0|
 | Slack | 0 (MET) | 0 (MET) |
 
@@ -237,9 +237,9 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 | Parameter | Normal Reg File | Hardened Reg File |
 |----------|-------|------------|
-| Switching Power | 24.9706 µW | 79.1454 µW |
-| Leakage Power | 2.1639 × 10⁷ pW | 2.8040  × 10⁷ pW |
-| Total Power | 202.1359 µW | 231.2428 µW |
+| Switching Power | 24.9706 µW | 68.3205 µW |
+| Leakage Power | 2.1639 × 10⁷ pW | 2.3072  × 10⁷ pW |
+| Total Power | 202.1359 µW | 191.7744 µW |
 
 </div>
 
