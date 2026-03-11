@@ -137,20 +137,15 @@ RTL simulation is performed to verify the functionality of the radiation-hardene
 ### 1. Compile the RTL files
 
 ```bash
-vcs -sverilog rtl/reg.sv rtl/hard_reg.sv tb/testbench.sv
+vcs -full64 -sverilog rtl/hard_reg.sv tb/hardReg_tb.sv -debug_access+all -lca -kdb
 ```
 
 ### 2. Run the simulation
 
 ```bash
-./simv
+./simv Verdi
 ```
 
-### 3. Open waveform to observe register behavior
-
-```bash
-verdi -ssf wave.fsdb -nologo
-```
 
 ---
 
@@ -177,7 +172,7 @@ dc_shell
 ### 2. Run the synthesis script
 
 ```tcl
-source synth.tcl
+source run_dc.tcl
 ```
 
 Typical synthesis script includes:
@@ -187,17 +182,6 @@ Typical synthesis script includes:
 - Applying constraints
 - Compiling the design
 - Generating reports
-
-Example commands:
-
-```tcl
-read_file -format sverilog rtl/reg.sv
-read_file -format sverilog rtl/hard_reg.sv
-elaborate hard_reg
-compile
-report_area
-report_timing
-```
 
 ---
 
@@ -214,23 +198,18 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 ---
 
-## Expected Observations
-
-- The **radiation-hardened design** consumes more area due to redundant register file copies.
-- Additional logic is required to implement the **majority voting mechanism**.
-- Despite the area overhead, the design provides **fault tolerance against Single Event Upsets (SEU)**, ensuring reliable operation in radiation-prone environments.
 # Results 
-## Timing Report
+## Timing Report (after retime)
 
 <div align="center">
 
-| Parameter | Value |
-|----------|-------|
-| Clock Period | 5 ns |
-| Data Required Time | 4.20 ns |
-| Data Arrival Time | -1.54 ns |
-| Slack | 2.66 ns |
-| Hold Violations | 0 |
+| Parameter (ns) | noraml Reg File | Hardened Reg File |
+|----------|-------| --------|
+| Clock Period  | 2.2 | 2.2 |
+| Data Required Time | 1.40 | 1.40 |
+| Data Arrival Time | -1.40 | -1.40 |
+| Hold Violations | 0 | 0|
+| Slack | 0 (MET) | 0 (MET) |
 
 </div>
 
@@ -240,13 +219,13 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 <div align="center">
 
-| Parameter | Value |
-|----------|-------|
-| Ports | 113 |
-| Nets | 3631 |
-| Cells | 3582 |
-| Total Cell Area | 13007.852587 µm² |
-| Total Area | 18347.801939 µm² |
+| Parameter | Normal Reg File | Hardened Reg File |
+|-----------------------|-------|-----------------|
+| Ports                 | 237 | 241 |
+| Nets                  | 3754 | 3839 | 
+| Cells                 | 3612 | 3694 |
+| Total Cell Area (µm²) | 11180.811270 | 11518.5686 |
+| Total Area (µm²)      | 14772.286640 | 15224.8029|
 
 </div>
 
@@ -256,12 +235,12 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 <div align="center">
 
-| Parameter | Value |
-|----------|-------|
-| Internal Power | 735.8311 µW |
-| Switching Power | 6.2854 µW |
-| Leakage Power | 2.8275 × 10⁻⁷ pW |
-| Total Power | 770.3917 µW |
+| Parameter | noraml Reg File | Hardened Reg File |
+|----------|-------|------------|
+| Internal Power | 155.5265 µW | 164.0199 µW |
+| Switching Power | 24.9706 µW | 25.8250 µW |
+| Leakage Power | 2.1639 × 10⁷ pW | 2.3197  × 10⁷ pW |
+| Total Power | 202.1359 µW | 213.0372 µW |
 
 </div>
 
