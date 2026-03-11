@@ -315,42 +315,55 @@ module tb;
         $display("--------------------------------------------------\n");
     endtask
 
+    task inject_full_array_fault();
+        int arr_idx;
+        $display("\n[TB] @%0t: === SCENARIO 2: TOTAL MODULE FAILURE ===", $time);
+        
+        arr_idx = $urandom_range(0, 2); 
+        
+        $display("[TB] RADIATION STRIKE: Completely corrupting Array %0d with garbage data!", arr_idx);
+        
+        for (int i = 0; i < 32; i++) begin
+            if (arr_idx == 0) 
+                DUT.regA[i] = $urandom();
+            else if (arr_idx == 1) 
+                DUT.regB[i] = $urandom();
+            else 
+                DUT.regC[i] = $urandom();
+        end
+        $display("--------------------------------------------------\n");
+    endtask
+
     initial begin
         env = new(intf.TB);
         env.test(); 
 
-        // --------------------------------------------------
-        // PHASE 1: WRITE GOLDEN DATA
-        // --------------------------------------------------
+        // single event upset
         env.gen.write_mem();
-        
-        // Wait until the Driver has pulled all 32 writes from the mailbox!
-        // This takes ~320ns in simulation time.
         wait(env.gen.gen2drv.num() == 0); 
-        
-        // Wait 3 extra clock cycles for the final write to physically settle in the RTL
         #30; 
 
-        // --------------------------------------------------
-        // PHASE 2: FAULT INJECTION
-        // --------------------------------------------------
         inject_faults(15);
         #10; 
-
-        // --------------------------------------------------
-        // PHASE 3: READ AND VERIFY
-        // --------------------------------------------------
-        env.gen.read_mem();
         
-        // Wait until the Driver has pulled all 32 reads from the mailbox!
+        env.gen.read_mem(); 
         wait(env.gen.gen2drv.num() == 0); 
-
-        // Give the Monitor and Scoreboard time to catch and process the final outputs
         #15; 
-        
-        // Print the glorious results
-        env.scb.print_summary();
 
+        // total mem fail
+        $display("\n[TB] @%0t: --- TOTAL MEM FAILURE ---", $time);
+        env.gen.write_mem(); 
+        wait(env.gen.gen2drv.num() == 0); 
+        #30;
+        
+        inject_full_array_fault();
+        #10;
+        
+        env.gen.read_mem(); 
+        wait(env.gen.gen2drv.num() == 0); 
+        #15;
+        
+        env.scb.print_summary();
         env.mon.print_coverage();
         
         $finish; 
