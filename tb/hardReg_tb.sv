@@ -334,6 +334,24 @@ module tb;
         $display("--------------------------------------------------\n");
     endtask
 
+    task display_memory_state(string scenario_name);
+        $display("\n===========================================================================");
+        $display(" MEMORY DUMP: %s", scenario_name);
+        $display("===========================================================================");
+        $display("| ADDR |      regA      |      regB      |      regC      |   STATUS  |");
+        $display("===========================================================================");
+        
+        for (int i = 0; i < 32; i++) begin
+            // Check if all three arrays match. If not, flag it as a FAULT!
+            string status = (DUT.regA[i] == DUT.regB[i] && DUT.regB[i] == DUT.regC[i]) ? "  OK  " : "*FAULT*";
+            
+            // Print the side-by-side hex values
+            $display("|  %2d  |   %8h   |   %8h   |   %8h   |  %s |", 
+                     i, DUT.regA[i], DUT.regB[i], DUT.regC[i], status);
+        end
+        $display("===========================================================================\n");
+    endtask
+
     initial begin
         env = new(intf.TB);
         env.test(); 
@@ -346,6 +364,7 @@ module tb;
         inject_faults(15);
         #10; 
         
+        display_memory_state("POST-STRIKE (SINGLE EVENT UPSETS)");
         env.gen.read_mem(); 
         wait(env.gen.gen2drv.num() == 0); 
         #15; 
@@ -359,6 +378,7 @@ module tb;
         inject_full_array_fault();
         #10;
         
+        display_memory_state("POST-STRIKE (TOTAL MODULE FAILURE)");
         env.gen.read_mem(); 
         wait(env.gen.gen2drv.num() == 0); 
         #15;
