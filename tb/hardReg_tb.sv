@@ -94,11 +94,7 @@ class generator;
         repeat(repeat_count) begin
             if (!trans.randomize() with {reg_write == 1'b0;}) begin
                 $fatal("[GEN] Randomization failed!");
-            end
-            
-            trans.rs1 = trans.rd;
-            trans.rs2 = trans.rd;
-            
+            end            
             gen2drv.put(trans.copy());
         end
         -> ended; 
@@ -350,7 +346,7 @@ module tb;
         wait(env.gen.gen2drv.num() == 0); 
 
         // Give the Monitor and Scoreboard time to catch and process the final outputs
-        #40; 
+        #15; 
         
         // Print the glorious results
         env.scb.print_summary();
