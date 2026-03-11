@@ -296,6 +296,12 @@ module tb;
                     // Print the exact corruption in Hex
                     $display("[SEU] Array %0d | Addr %2d | Bit %2d flipped | Orig: %8h -> Bad: %8h", arr, r, b, orig_val, bad_val);
                     
+                    if (arr == 0 && r == 0 && b < 3) begin
+                        env.scb.verbose = 1; 
+                    end else begin
+                        env.scb.verbose = 0; 
+                    end
+
                     // Verify TMR masks it
                     env.gen.read_single(r); 
                     wait(env.gen.gen2drv.num() == 0); 
