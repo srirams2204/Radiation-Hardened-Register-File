@@ -11,29 +11,20 @@ module hard_reg(
     input logic reg_write
 );
 
-// regA = main write register
-logic [31:0] regA [0:31];
+(* dont_touch = "true" *) reg [31:0] regA [0:31];
+(* dont_touch = "true" *) reg [31:0] regB [0:31];
+(* dont_touch = "true" *) reg [31:0] regC [0:31];
 
-// regB and regC are redundant copy
-logic [31:0] regB [0:31];
-logic [31:0] regC [0:31];
+logic weA, weB, weC;
 
-// Optional init for simulation
-initial begin
-    for (int i = 0; i < 32; i = i + 1) begin
-        regA[i] = 32'b0;
-        regB[i] = 32'b0;
-        regC[i] = 32'b0;
-    end
-end
+assign weA = reg_write;
+assign weB = reg_write;
+assign weC = reg_write;
 
-// Writing to Register
-always_ff @(posedge clk) begin
-    if (reg_write) begin
-        regA[rd] <= rd_data;
-        regB[rd] <= rd_data;
-        regC[rd] <= rd_data;
-    end    
+always @(posedge clk) begin
+    if (weA) regA[rd] <= rd_data;
+    if (weB) regB[rd] <= rd_data;
+    if (weC) regC[rd] <= rd_data;
 end
 
 // voting correction while read
