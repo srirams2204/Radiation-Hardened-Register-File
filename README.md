@@ -221,11 +221,11 @@ To analyze the overhead introduced by redundancy, both the **standard register f
 
 | Parameter | Normal Reg File | Hardened Reg File |
 |-----------------------|-------|-----------------|
-| Ports                 | 237 | 241 |
-| Nets                  | 3754 | 3839 | 
-| Cells                 | 3612 | 3694 |
-| Total Cell Area (µm²) | 11180.811270 | 11518.5686 |
-| Total Area (µm²)      | 14772.286640 | 15224.8029|
+| Ports                 | 113 | 113 |
+| Nets                  | 3619 | 9042 | 
+| Cells                 | 3570 | 8993 |
+| Total Cell Area (µm²) | 13087.1455 | 14331.9426 |
+| Total Area (µm²)      | 18614.4979 | 24622.6721 |
 
 </div>
 
