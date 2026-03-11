@@ -358,7 +358,8 @@ module tb;
         // RUN SCENARIO 1 (Exhaustive)
         // ==========================================
         exhaustive_seu_test();
-
+        display_memory_state("POST-SCENARIO 1: MEMORY SURVIVED 3,072 STRIKES");
+        
         // ==========================================
         // RUN SCENARIO 2 (DEU)
         // ==========================================
